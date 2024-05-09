@@ -1,5 +1,7 @@
 # Rust's output directory
 target
 
+test_snapshots
+
 # Local Soroban settings
 .soroban
