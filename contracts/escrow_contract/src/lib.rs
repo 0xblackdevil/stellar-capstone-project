@@ -13,6 +13,18 @@ pub struct User {
     pub user_name: Symbol,
 }
 
+#[contracttype]
+pub enum ListOfProjects {
+    Project(u64),
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Project {
+    pub p_id: u64,
+    pub p_name: Symbol,
+}
+
 #[contract]
 pub struct EscrowContract;
 
@@ -45,8 +57,35 @@ impl EscrowContract {
         })
     }
 
-    pub fn create_project(e: Env, _total_budget: u32) {
-        log!(&e, "Projects Total Budget: {}", _total_budget);
+    pub fn create_project(e: Env, _project_name: Symbol, _project_id: u64) -> Symbol {
+        let project: Project = Self::view_project(e.clone(), _project_id.clone());
+
+        if project.p_id != 0 {
+            panic!("Project already exists");
+        } else {
+            let project_name: Symbol = _project_name.clone();
+            let project: Project = Project {
+                p_id: _project_id.clone(),
+                p_name: project_name.clone(),
+            };
+
+            e.storage()
+                .persistent()
+                .set(&ListOfProjects::Project(_project_id.clone()), &project);
+
+            log!(&e, "Project Added: {}", project_name);
+        }
+
+        _project_name
+    }
+
+    pub fn view_project(e: Env, _project_id: u64) -> Project {
+        let key: ListOfProjects = ListOfProjects::Project(_project_id.clone());
+
+        e.storage().instance().get(&key).unwrap_or(Project {
+            p_id: 0,
+            p_name: symbol_short!("not_found"),
+        })
     }
 
     // pub fn fund_project() {}
@@ -63,5 +102,4 @@ impl EscrowContract {
 
     // pub fn resolve_dispute() {}
 }
-
 mod test;
